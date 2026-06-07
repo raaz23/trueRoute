@@ -5,25 +5,31 @@
 import { readFileSync, existsSync } from "fs";
 import { spawnSync } from "child_process";
 
-const envFile = existsSync(".env.local") ? ".env.local" : existsSync(".env") ? ".env" : null;
-if (!envFile) {
-  console.log("No .env.local or .env found — skip env sync");
+const skip = new Set(["DATABASE_URL"]);
+const envFiles = [".env", ".env.local"].filter((f) => existsSync(f));
+if (envFiles.length === 0) {
+  console.log("No .env or .env.local found — skip env sync");
   process.exit(0);
 }
 
-const skip = new Set(["DATABASE_URL"]);
-const lines = readFileSync(envFile, "utf8").split(/\r?\n/);
-
-for (const line of lines) {
-  const trimmed = line.trim();
-  if (!trimmed || trimmed.startsWith("#")) continue;
-  const eq = trimmed.indexOf("=");
-  if (eq < 1) continue;
-  const key = trimmed.slice(0, eq).trim();
-  let value = trimmed.slice(eq + 1).trim();
-  if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
-    value = value.slice(1, -1);
+/** Later files override earlier ones (.env.local wins). */
+const vars = new Map();
+for (const file of envFiles) {
+  for (const line of readFileSync(file, "utf8").split(/\r?\n/)) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith("#")) continue;
+    const eq = trimmed.indexOf("=");
+    if (eq < 1) continue;
+    const key = trimmed.slice(0, eq).trim();
+    let value = trimmed.slice(eq + 1).trim();
+    if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+      value = value.slice(1, -1);
+    }
+    vars.set(key, value);
   }
+}
+
+for (const [key, value] of vars) {
   if (skip.has(key)) continue;
   if (!value || value.includes("your-") || value.includes("localhost")) {
     if (key === "NEXT_PUBLIC_SITE_URL") continue;
