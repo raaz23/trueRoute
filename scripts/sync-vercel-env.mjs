@@ -30,7 +30,7 @@ for (const line of lines) {
   }
 
   console.log(`Setting ${key}...`);
-  const result = spawnSync("vercel", ["env", "add", key, "production", "--force"], {
+  const result = spawnSync("npx", ["--yes", "vercel@latest", "env", "add", key, "production", "--force"], {
     input: value,
     encoding: "utf8",
     shell: true,
