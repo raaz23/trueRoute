@@ -1,13 +1,15 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { UserRound } from "lucide-react";
 
 const navLinks = [
-  { label: "Features",    href: "/features" },
-  { label: "Fair Prices", href: "/#prices" },
-  { label: "Cities",      href: "/#cities" },
-  { label: "AI Guide",    href: "/features#ai" },
-  { label: "Translate",   href: "/features#translate" },
+  { label: "Features", href: "/features" },
+  { label: "Fair prices", href: "/#prices" },
+  { label: "Cities", href: "/cities" },
+  { label: "How it works", href: "/how-it-works" },
+  { label: "FAQ", href: "/faq" },
+  { label: "About", href: "/about" },
 ];
 
 export default function Navbar() {
@@ -56,8 +58,28 @@ export default function Navbar() {
             ))}
           </div>
 
-          {/* CTA + mobile hamburger */}
-          <div className="flex items-center gap-4">
+          {/* Profile hub + auth + CTA + mobile hamburger */}
+          <div className="flex items-center gap-3 md:gap-4">
+            <Link
+              href="/profile"
+              title="Profile — account, saved places, notes, adventures, private essentials"
+              aria-label="Open profile"
+              className="hidden md:flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border border-white/15 bg-[var(--bg-card)] text-[var(--gold)] transition-colors hover:border-[var(--gold)]/40 hover:bg-[var(--gold-muted)]"
+            >
+              <UserRound className="h-5 w-5" strokeWidth={2} />
+            </Link>
+            <Link
+              href="/login"
+              className="hidden md:inline text-[13px] font-medium text-[var(--text-muted)] hover:text-[var(--text)] transition-colors"
+            >
+              Log in
+            </Link>
+            <Link
+              href="/signup"
+              className="hidden md:inline text-[13px] font-semibold text-[var(--gold)] hover:text-[var(--gold-light)] transition-colors"
+            >
+              Sign up
+            </Link>
             <Link
               href="/#waitlist"
               className="hidden md:inline-flex bg-gradient-to-r from-[#D4A017] to-[#A87C10] text-white text-[13px] font-semibold px-5 py-2.5 rounded-xl hover:shadow-[0_8px_24px_rgba(212,160,23,0.35)] hover:-translate-y-0.5 transition-all duration-200"
@@ -102,7 +124,38 @@ export default function Navbar() {
                 {link.label}
               </Link>
             ))}
-            <div className="mt-2 pt-4 border-t border-white/8">
+            <div className="mt-2 space-y-2 border-t border-white/8 pt-4">
+              <Link
+                href="/profile"
+                onClick={() => setMenuOpen(false)}
+                className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-white/12 py-3 px-4 text-center text-[15px] font-medium text-[var(--text)] hover:bg-white/5"
+              >
+                <UserRound className="h-5 w-5 text-[var(--gold)]" />
+                Profile &amp; traveler hub
+              </Link>
+              <Link
+                href="/map"
+                onClick={() => setMenuOpen(false)}
+                className="block cursor-pointer rounded-xl py-2.5 text-center text-[13px] font-medium text-[var(--text-muted)] hover:text-[var(--text)]"
+              >
+                Map &amp; tools →
+              </Link>
+              <div className="flex gap-2">
+                <Link
+                  href="/login"
+                  onClick={() => setMenuOpen(false)}
+                  className="flex-1 rounded-xl border border-white/15 py-3 text-center text-[14px] font-semibold text-[var(--text)]"
+                >
+                  Log in
+                </Link>
+                <Link
+                  href="/signup"
+                  onClick={() => setMenuOpen(false)}
+                  className="flex-1 rounded-xl border border-[var(--gold)]/40 py-3 text-center text-[14px] font-semibold text-[var(--gold)]"
+                >
+                  Sign up
+                </Link>
+              </div>
               <Link
                 href="/#waitlist"
                 onClick={() => setMenuOpen(false)}

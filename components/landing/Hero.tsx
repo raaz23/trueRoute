@@ -40,17 +40,24 @@ export default function Hero() {
 
               {/* CTA Buttons */}
               <div className="anim-fade-up-4 flex flex-wrap gap-4 mb-12">
-                <button
-                  onClick={() => scrollTo("waitlist")}
-                  className="bg-gradient-to-r from-[#D4A017] to-[#A87C10] text-white text-[15px] font-semibold px-7 py-4 rounded-xl hover:shadow-[0_12px_32px_rgba(212,160,23,0.4)] hover:-translate-y-1 transition-all duration-300"
-                >
-                  Get early access — free ↗
-                </button>
                 <Link
-                  href="/features"
+                  href="/map"
+                  className="inline-flex items-center justify-center bg-gradient-to-r from-[#D4A017] to-[#A87C10] text-white text-[15px] font-semibold px-7 py-4 rounded-xl hover:shadow-[0_12px_32px_rgba(212,160,23,0.4)] hover:-translate-y-1 transition-all duration-300"
+                >
+                  Open app — start exploring →
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => scrollTo("waitlist")}
                   className="inline-flex items-center justify-center border border-white/15 text-[var(--text)] text-[15px] font-medium px-7 py-4 rounded-xl hover:bg-white/5 hover:border-white/30 transition-all duration-300"
                 >
-                  See all features →
+                  Join waitlist
+                </button>
+                <Link
+                  href="/login"
+                  className="inline-flex items-center justify-center text-[14px] font-medium text-[var(--teal)] px-2 py-4 hover:underline"
+                >
+                  Sign in with Google
                 </Link>
               </div>
 

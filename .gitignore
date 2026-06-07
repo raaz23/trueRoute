@@ -39,3 +39,16 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# local business uploads (dev fallback when Supabase storage unavailable)
+/public/uploads/
+
+# local sqlite database
+/prisma/dev.db
+/prisma/*.db
+/prisma/*.db-journal
+
+# scratch / backup files
+app/page_bkp.tsx
+pending.txt
+brainstorming_ideas*.txt

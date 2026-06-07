@@ -1,0 +1,53 @@
+{
+  "name": "TrueRoute — Honest Travel",
+  "short_name": "TrueRoute",
+  "description": "Fair prices, places, translation & emergency — works offline in Nepal.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#060A14",
+  "theme_color": "#D4A017",
+  "categories": ["travel", "navigation"],
+  "icons": [
+    {
+      "src": "/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Fair Prices",
+      "url": "/prices",
+      "description": "Show verified local prices"
+    },
+    {
+      "name": "Emergency",
+      "url": "/emergency",
+      "description": "One-tap emergency numbers"
+    },
+    {
+      "name": "Map",
+      "url": "/map",
+      "description": "Tourist map with GPS"
+    },
+    {
+      "name": "AI Guide",
+      "url": "/chat",
+      "description": "Offline-capable travel assistant"
+    },
+    {
+      "name": "Translate",
+      "url": "/translate",
+      "description": "Nepali phrases offline"
+    }
+  ]
+}

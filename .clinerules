@@ -1,0 +1,172 @@
+# TrueRoute — Cline / AI coding rules
+
+You are working on **TrueRoute** (`trueroute/`), a Next.js 16 app: a **real travel service** for Nepal tourists — not a landing-page-only project.
+
+## Mandatory workflow (every task)
+
+### BEFORE any work
+
+1. Read **`PROJECT_CONTEXT.md`** (`trueroute/PROJECT_CONTEXT.md`).
+2. Read **`.clinerules`** (this file).
+3. Plan how the change connects to live routes (`/map`, `/prices`, etc.) — avoid dead UI.
+
+### AFTER completing the task
+
+If behavior, structure, auth, env, APIs, or conventions changed:
+
+1. Update **`PROJECT_CONTEXT.md`** (affected sections + “Last updated” footer).
+2. Update **`.clinerules`** if new rules apply.
+3. Skip only for trivial non-behavioral edits.
+
+---
+
+## Product intent (read this)
+
+- **Home `/`** = `components/home/ServiceHub.tsx` — service grid, not a long marketing scroll.
+- Every feature card/button should **navigate to a working app route** or API-backed page.
+- Tourists can use core tools **without login** (guest mode).
+- Admin bulk data: **`/admin/import`** (CSV/TXT + Gemini).
+
+---
+
+## Stack (do not swap without asking)
+
+- Next.js 16 App Router, React 19, TypeScript, Tailwind v4
+- Prisma + SQLite (local) · Supabase optional (auth + production DB)
+- PWA: IndexedDB + `public/sw.js`
+- AI: `GOOGLE_GEMINI_API_KEY` → Groq → offline (`lib/ai/gemini.ts`)
+- Maps: Leaflet + Stadia — `components/app/StadiaMapView.tsx`, `/api/map/*`, `NEXT_PUBLIC_STADIA_MAPS_API_KEY`
+
+---
+
+## Project map
+
+| Area | Path |
+|------|------|
+| Home (services) | `app/page.tsx`, `components/home/ServiceHub.tsx` |
+| Tourist app | `app/(app)/`, `components/app/AppChrome.tsx` |
+| Marketing | `app/features`, `components/landing/*` |
+| Admin | `app/admin/`, `components/admin/` |
+| APIs | `app/api/` |
+| Auth | `components/auth/`, `lib/auth/` |
+| Import | `app/admin/(panel)/import/`, `lib/ai/import-parser.ts`, `lib/admin/apply-import.ts` |
+
+---
+
+## Code style
+
+- Match existing patterns; small focused diffs; `@/` imports.
+- Zod-validate API inputs (`lib/validations/`).
+- **Animations:** `import { motion } from "motion/react"` — use `motion.div`, `motion.section`, etc.
+- **Never** write `<motion>` or `</motion>` as unknown HTML tags (common build breaker).
+
+---
+
+## Auth rules
+
+### Tourist
+
+| Context | Rule |
+|---------|------|
+| Guest | Required — `/map`, `/prices`, `/chat`, etc. work without account |
+| No Supabase | `AuthForm` allows guest + **local profile** after `validateTouristEmail()` |
+| With Supabase | Verified email required for `/profile`, `/submit-price` |
+| Disposable email | Blocked via `lib/auth/email-validation.ts` |
+
+Do not remove guest mode or break local dev login when Supabase is unset.
+
+### Admin
+
+| Context | Rule |
+|---------|------|
+| Founder only | `ADMIN_EMAIL` (default `yadavraj1244@gmail.com`) |
+| With Supabase | `isFounderAdminUser()` — verified Supabase session |
+| Without Supabase | `tr_admin_session` cookie via `/api/admin/login` + `verifyAdminTokenEdge()` |
+| Middleware | Use **`lib/auth/admin-edge.ts`** only — not Node `crypto` in middleware |
+
+Routes: `/admin/login`, `/auth/admin-callback`, `/api/admin/login`, `/api/admin/import`.
+
+---
+
+## Data rules
+
+- Offline bundle: `lib/data/travel-pack.ts` (Supabase if configured, else Prisma).
+- **Prisma `Price`:** `touristPriceMin/Max`, `fairPriceMin/Max`, `localTip` — not `touristPrice`/`fairPrice`/`tip`.
+- Admin import applies to **Prisma** via `applyImportPayload()`.
+- Never commit `.env`, API keys, `dev.db`.
+
+---
+
+## API conventions
+
+- Chat: `{ messages: [{ role, content }] }` — response may use `response` or `message.content`.
+- Errors: `{ error: string }` + correct HTTP status.
+- Supabase: guard with `isSupabaseConfigured()` / `createClientSafe()`.
+- Admin import: `POST /api/admin/import` — `FormData` with `file` and/or `text`.
+
+---
+
+## UI / UX
+
+- Theme: dark navy `#060A14`, gold `#D4A017`, teal `#0F9D8D` (`app/globals.css`).
+- Fonts: Playfair Display + Plus Jakarta Sans.
+- Mobile-first; respect `AppChrome` bottom nav.
+- New homepage/marketing UI: **link to real services**, minimal filler copy.
+
+---
+
+## SEO
+
+- `app/sitemap.ts`, `app/robots.ts`, `components/seo/JsonLd.tsx`
+- `NEXT_PUBLIC_SITE_URL` for production canonical URLs
+- Do not put secrets in metadata or docs
+
+---
+
+## Files to check before editing
+
+| Task | Files |
+|------|-------|
+| Middleware | `middleware.ts`, `lib/supabase/middleware.ts`, `lib/auth/admin-edge.ts` |
+| Auth | `AuthProvider.tsx`, `AuthForm.tsx`, `lib/auth/founder.ts` |
+| Home | `app/page.tsx`, `components/home/ServiceHub.tsx` |
+| Chat / AI | `app/api/chat/route.ts`, `lib/ai/gemini.ts` |
+| Import | `app/api/admin/import/route.ts`, `lib/ai/import-parser.ts`, `lib/admin/apply-import.ts` |
+| Offline | `lib/offline/*`, `hooks/useOfflineBundle.ts` |
+
+---
+
+## Commands
+
+```bash
+cd trueroute
+npm run db:seed
+npm run dev
+npm run build
+TEST_BASE_URL=http://localhost:3001 npm run test:demo
+```
+
+---
+
+## Do not
+
+- Commit secrets or paste API keys into `PROJECT_CONTEXT.md`, `.clinerules`, or source.
+- Force login on guest-accessible tourist routes.
+- Replace service hub home with a 15-section landing without explicit user request.
+- Use Node `crypto` in `middleware.ts`.
+- Add heavy dependencies without strong reason ($0 budget).
+- Create placeholder-only pages when user asked for real functionality.
+- `git commit` unless the user explicitly asks.
+
+---
+
+## When unsure
+
+1. Re-read `PROJECT_CONTEXT.md` and this file.
+2. Read `SETUP.md`.
+3. Grep `app/api/` and `components/app/` for patterns.
+4. Extend existing helpers; avoid new abstractions for one-off use.
+
+---
+
+*Maintained with PROJECT_CONTEXT.md — update both after every meaningful task. Last sync: service hub, dual auth, admin import, Gemini, SEO, motion/react, admin-edge.*

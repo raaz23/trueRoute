@@ -1,5 +1,4 @@
-import Navbar from "@/components/landing/Navbar";
-import ScrollReveal from "@/components/landing/ScrollReveal";
+import MarketingShell from "@/components/landing/MarketingShell";
 import Features from "@/components/landing/Features";
 import AIChat from "@/components/landing/AIChat";
 import Translation from "@/components/landing/Translation";
@@ -16,15 +15,13 @@ export const metadata: Metadata = {
 
 export default function FeaturesPage() {
   return (
-    <main className="grain min-h-screen pb-12 pt-24 md:pt-28">
-      <ScrollReveal />
-      <Navbar />
+    <MarketingShell>
       <Features />
       <AIChat />
       <Translation />
       <Emergency />
       <MapPreview />
       <Gallery />
-    </main>
+    </MarketingShell>
   );
 }

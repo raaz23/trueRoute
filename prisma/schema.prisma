@@ -1,0 +1,715 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  SUPERADMIN
+  SUB_ADMIN
+  ADMIN
+  APPROVER
+  ORGANIZATION
+  BUSINESS
+  CONTRIBUTOR
+  TOURIST
+}
+
+enum BusinessAccountType {
+  BUSINESS
+  ORGANIZATION
+  GOVERNMENT
+}
+
+enum BusinessStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  SUSPENDED
+}
+
+enum SubscriptionPlan {
+  FREE
+  PREMIUM
+  ENTERPRISE
+}
+
+enum BusinessCategory {
+  HOTEL
+  RESORT
+  RESTAURANT
+  CAFE
+  TRAVEL_AGENCY
+  TOUR_OPERATOR
+  ADVENTURE
+  TRANSPORT
+  TAXI
+  CAR_RENTAL
+  BIKE_RENTAL
+  SHOP
+  HANDICRAFT
+  CULTURAL_CENTER
+  MUSEUM
+  ATTRACTION
+  EMERGENCY_SERVICE
+  NGO
+  GOVERNMENT
+  OTHER
+}
+
+enum MediaAlbum {
+  COVER
+  LOGO
+  INTERIOR
+  EXTERIOR
+  PRODUCTS
+  SERVICES
+  TEAM
+  EVENTS
+  VIDEOS
+}
+
+enum BadgeType {
+  VERIFIED
+  GOVERNMENT_VERIFIED
+  COMMUNITY_TRUSTED
+  FAIR_PRICING
+  TOP_RATED
+  SCAM_FREE
+}
+
+enum ReportType {
+  OVERCHARGING
+  SCAM
+  MISLEADING_AD
+  HIDDEN_FEES
+  POOR_SERVICE
+  SAFETY
+}
+
+enum InquiryType {
+  GENERAL
+  BOOKING
+  QUOTE
+}
+
+enum DocumentType {
+  BUSINESS_LICENSE
+  GOVERNMENT_APPROVAL
+  TAX_REGISTRATION
+  OTHER
+}
+
+enum ComplaintStatus {
+  OPEN
+  UNDER_REVIEW
+  RESOLVED
+  CLOSED
+}
+
+enum AnalyticsEventType {
+  PROFILE_VIEW
+  QR_SCAN
+  INQUIRY
+  PHONE_CLICK
+  WHATSAPP_CLICK
+  DIRECTION_CLICK
+}
+
+enum PlaceCategory {
+  TEMPLE
+  PALACE
+  LAKE
+  MARKET
+  PARK
+  MUSEUM
+  TRAIL
+  VIEWPOINT
+}
+
+enum PriceCategory {
+  TRANSPORT
+  FOOD
+  ACCOMMODATION
+  ATTRACTION
+  SHOPPING
+}
+
+enum SubmissionStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model User {
+  id          String   @id @default(cuid())
+  email       String   @unique
+  name        String?
+  nationality String?
+  role        UserRole @default(TOURIST)
+  avatarUrl   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  priceSubmissions PriceSubmission[] @relation("Submitter")
+  reviewedSubmissions PriceSubmission[] @relation("Reviewer")
+  feedback         Feedback[]
+  ownedBusinesses  Business[]        @relation("BusinessOwner")
+  businessReviews  BusinessReview[]
+  businessReports  BusinessReport[]
+  businessFollows  BusinessFollow[]
+  businessFavorites BusinessFavorite[]
+  businessLists    BusinessList[]
+  regionAssignments AdminRegionAssignment[]
+}
+
+model AdminRegionAssignment {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  cityId    String
+  city      City     @relation(fields: [cityId], references: [id], onDelete: Cascade)
+  role      UserRole @default(SUB_ADMIN)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, cityId])
+}
+
+model City {
+  id           String   @id @default(cuid())
+  name         String
+  country      String   @default("Nepal")
+  slug         String   @unique
+  description  String?
+  lat          Float?
+  lng          Float?
+  isActive     Boolean  @default(true)
+  heroImageUrl String?
+  sortOrder    Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  places      Place[]
+  prices      Price[]
+  submissions PriceSubmission[]
+  businesses  Business[]
+  adminRegions AdminRegionAssignment[]
+}
+
+model Place {
+  id              String        @id @default(cuid())
+  cityId          String
+  city            City          @relation(fields: [cityId], references: [id], onDelete: Cascade)
+  name            String
+  slug            String        @unique
+  description     String?
+  history         String?
+  category        PlaceCategory @default(TEMPLE)
+  lat             Float?
+  lng             Float?
+  entryFeeLocal   Int?
+  entryFeeTourist Int?
+  bestTime        String?
+  openingHours    String?
+  howToGetThere   String?
+  fairPriceTip    String?
+  approved        Boolean       @default(true)
+  featured        Boolean       @default(false)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  photos   Photo[]
+  feedback Feedback[]
+}
+
+model Price {
+  id               String        @id @default(cuid())
+  cityId           String
+  city             City          @relation(fields: [cityId], references: [id], onDelete: Cascade)
+  category         PriceCategory
+  serviceName      String
+  routeFrom        String?
+  routeTo          String?
+  touristPriceMin  Int
+  touristPriceMax  Int?
+  fairPriceMin     Int
+  fairPriceMax     Int?
+  currency         String        @default("NPR")
+  localTip         String?
+  verified         Boolean       @default(true)
+  sortOrder        Int           @default(0)
+  lastVerifiedAt   DateTime      @default(now())
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+}
+
+model PriceSubmission {
+  id              String           @id @default(cuid())
+  submitterId     String?
+  submitter       User?            @relation("Submitter", fields: [submitterId], references: [id])
+  cityId          String
+  city            City             @relation(fields: [cityId], references: [id])
+  category        PriceCategory
+  serviceName     String
+  routeFrom       String?
+  routeTo         String?
+  pricePaid       Int
+  currency        String           @default("NPR")
+  receiptPhotoUrl String?
+  notes           String?
+  status          SubmissionStatus @default(PENDING)
+  reviewedById    String?
+  reviewedBy      User?            @relation("Reviewer", fields: [reviewedById], references: [id])
+  reviewNote      String?
+  createdAt       DateTime         @default(now())
+}
+
+model Photo {
+  id           String   @id @default(cuid())
+  placeId      String?
+  place        Place?   @relation(fields: [placeId], references: [id], onDelete: SetNull)
+  url          String
+  thumbnailUrl String?
+  caption      String?
+  cityTag      String?
+  isHero       Boolean  @default(false)
+  isVideo      Boolean  @default(false)
+  approved     Boolean  @default(true)
+  sortOrder    Int      @default(0)
+  createdAt    DateTime @default(now())
+}
+
+model Feedback {
+  id          String   @id @default(cuid())
+  userId      String?
+  user        User?    @relation(fields: [userId], references: [id])
+  placeId     String?
+  place       Place?   @relation(fields: [placeId], references: [id])
+  appRating   Int?
+  placeRating Int?
+  text        String?
+  authorName  String?
+  nationality String?
+  location    String?
+  featured    Boolean  @default(false)
+  approved    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+}
+
+model Waitlist {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  country   String?
+  createdAt DateTime @default(now())
+}
+
+model Faq {
+  id        String   @id @default(cuid())
+  question  String
+  answer    String
+  sortOrder Int      @default(0)
+  published Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Testimonial {
+  id          String   @id @default(cuid())
+  authorName  String
+  nationality String?
+  location    String?
+  rating      Int      @default(5)
+  text        String
+  featured    Boolean  @default(true)
+  published   Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+}
+
+model EmergencyNumber {
+  id          String   @id @default(cuid())
+  country     String   @default("Nepal")
+  label       String
+  number      String
+  description String?
+  sortOrder   Int      @default(0)
+  published   Boolean  @default(true)
+}
+
+model TranslationPhrase {
+  id         String   @id @default(cuid())
+  category   String
+  english    String
+  nepali     String
+  hindi      String?
+  sortOrder  Int      @default(0)
+  published  Boolean  @default(true)
+}
+
+model SiteSetting {
+  id    String @id @default(cuid())
+  key   String @unique
+  value String
+}
+
+// ─── Business Marketplace ───────────────────────────────────────────────────
+
+model Business {
+  id               String              @id @default(cuid())
+  slug             String              @unique
+  qrCode           String              @unique
+  accountType      BusinessAccountType @default(BUSINESS)
+  category         BusinessCategory
+  status           BusinessStatus      @default(PENDING)
+  subscriptionPlan SubscriptionPlan    @default(FREE)
+
+  name             String
+  tagline          String?
+  description      String?
+  establishedYear  Int?
+
+  email            String
+  phone            String?
+  whatsapp         String?
+  website          String?
+  socialFacebook   String?
+  socialInstagram  String?
+  socialTwitter    String?
+  socialYoutube    String?
+
+  businessHours    String?
+  languagesJson    String?
+
+  cityId           String?
+  city             City?    @relation(fields: [cityId], references: [id])
+  lat              Float?
+  lng              Float?
+  address          String?
+  nearbyLandmarks  String?
+
+  coverImageUrl    String?
+  logoUrl          String?
+
+  amenitiesJson    String?
+  certificationsJson String?
+  awardsJson       String?
+  uspJson          String?
+
+  trustScore       Float    @default(0)
+  emergencyTrustScore Float @default(100)
+  profileViews     Int      @default(0)
+  qrScans          Int      @default(0)
+  leadCount        Int      @default(0)
+
+  ownerId          String?
+  owner            User?    @relation("BusinessOwner", fields: [ownerId], references: [id])
+  featured         Boolean  @default(false)
+  verifiedAt       DateTime?
+  rejectionNote    String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  branches    BusinessBranch[]
+  media       BusinessMedia[]
+  services    BusinessService[]
+  packages    BusinessPackage[]
+  offers      BusinessOffer[]
+  blogPosts   BusinessBlogPost[]
+  events      BusinessEvent[]
+  reviews     BusinessReview[]
+  reports     BusinessReport[]
+  inquiries   BusinessInquiry[]
+  qas         BusinessQnA[]
+  badges      BusinessBadge[]
+  documents   BusinessDocument[]
+  complaints  ComplaintCase[]
+  follows     BusinessFollow[]
+  favorites   BusinessFavorite[]
+  listItems   BusinessListItem[]
+  analytics   BusinessAnalyticsEvent[]
+}
+
+model BusinessBranch {
+  id          String   @id @default(cuid())
+  businessId  String
+  business    Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  name        String
+  address     String?
+  lat         Float?
+  lng         Float?
+  phone       String?
+  isPrimary   Boolean  @default(false)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+}
+
+model BusinessMedia {
+  id          String     @id @default(cuid())
+  businessId  String
+  business    Business   @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  album       MediaAlbum @default(INTERIOR)
+  url         String
+  thumbnailUrl String?
+  caption     String?
+  isVideo     Boolean    @default(false)
+  videoProvider String?
+  sortOrder   Int        @default(0)
+  createdAt   DateTime   @default(now())
+}
+
+model BusinessService {
+  id          String   @id @default(cuid())
+  businessId  String
+  business    Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  name        String
+  description String?
+  priceMin    Int?
+  priceMax    Int?
+  currency    String   @default("NPR")
+  includesJson String?
+  excludesJson String?
+  hiddenFeeWarning String?
+  fairPriceNote String?
+  sortOrder   Int      @default(0)
+  published   Boolean  @default(true)
+  createdAt   DateTime @default(now())
+}
+
+model BusinessPackage {
+  id          String   @id @default(cuid())
+  businessId  String
+  business    Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  name        String
+  description String?
+  price       Int
+  currency    String   @default("NPR")
+  duration    String?
+  includesJson String?
+  excludesJson String?
+  seasonal    Boolean  @default(false)
+  validFrom   DateTime?
+  validUntil  DateTime?
+  published   Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+}
+
+model BusinessOffer {
+  id          String   @id @default(cuid())
+  businessId  String
+  business    Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  title       String
+  code        String?
+  description String?
+  discountPct Int?
+  discountAmount Int?
+  validFrom   DateTime?
+  validUntil  DateTime?
+  published   Boolean  @default(true)
+  createdAt   DateTime @default(now())
+}
+
+model BusinessBlogPost {
+  id          String   @id @default(cuid())
+  businessId  String
+  business    Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  slug        String
+  title       String
+  excerpt     String?
+  content     String
+  coverImageUrl String?
+  seoTitle    String?
+  seoDescription String?
+  published   Boolean  @default(false)
+  publishedAt DateTime?
+  viewCount   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([businessId, slug])
+}
+
+model BusinessEvent {
+  id          String   @id @default(cuid())
+  businessId  String
+  business    Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  title       String
+  description String?
+  startsAt    DateTime
+  endsAt      DateTime?
+  location    String?
+  lat         Float?
+  lng         Float?
+  ticketPrice Int?
+  ticketUrl   String?
+  published   Boolean  @default(true)
+  createdAt   DateTime @default(now())
+}
+
+model BusinessReview {
+  id              String   @id @default(cuid())
+  businessId      String
+  business        Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  userId          String?
+  user            User?    @relation(fields: [userId], references: [id])
+  authorName      String?
+  nationality     String?
+  overallRating   Int
+  serviceQuality  Int?
+  fairPricing     Int?
+  cleanliness     Int?
+  safety          Int?
+  authenticity    Int?
+  staffBehavior   Int?
+  text            String?
+  photoUrlsJson   String?
+  videoUrl        String?
+  reviewFingerprint String?
+  approved        Boolean  @default(false)
+  businessReply   String?
+  repliedAt       DateTime?
+  createdAt       DateTime @default(now())
+}
+
+model BusinessReport {
+  id          String     @id @default(cuid())
+  businessId  String
+  business    Business   @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  userId      String?
+  user        User?      @relation(fields: [userId], references: [id])
+  reportType  ReportType
+  title       String?
+  description String
+  evidenceUrlsJson String?
+  amountPaid  Int?
+  expectedPrice Int?
+  status      String     @default("pending")
+  businessReply String?
+  repliedAt   DateTime?
+  resolvedAt  DateTime?
+  createdAt   DateTime   @default(now())
+}
+
+model BusinessInquiry {
+  id          String      @id @default(cuid())
+  businessId  String
+  business    Business    @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  inquiryType InquiryType @default(GENERAL)
+  name        String
+  email       String?
+  phone       String?
+  message     String
+  preferredDate String?
+  guestCount  Int?
+  status      String      @default("new")
+  createdAt   DateTime    @default(now())
+}
+
+model BusinessQnA {
+  id          String   @id @default(cuid())
+  businessId  String
+  business    Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  question    String
+  askerName   String?
+  answer      String?
+  answeredAt  DateTime?
+  published   Boolean  @default(true)
+  createdAt   DateTime @default(now())
+}
+
+model BusinessBadge {
+  id          String    @id @default(cuid())
+  businessId  String
+  business    Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  badgeType   BadgeType
+  grantedAt   DateTime  @default(now())
+  expiresAt   DateTime?
+  note        String?
+
+  @@unique([businessId, badgeType])
+}
+
+model BusinessDocument {
+  id          String       @id @default(cuid())
+  businessId  String
+  business    Business     @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  docType     DocumentType
+  fileUrl     String
+  fileName    String?
+  verified    Boolean      @default(false)
+  verifiedAt  DateTime?
+  createdAt   DateTime     @default(now())
+}
+
+model ComplaintCase {
+  id          String          @id @default(cuid())
+  businessId  String
+  business    Business        @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  reportId    String?
+  title       String
+  description String
+  status      ComplaintStatus @default(OPEN)
+  resolution  String?
+  createdAt   DateTime        @default(now())
+  resolvedAt  DateTime?
+}
+
+model BusinessFollow {
+  id          String   @id @default(cuid())
+  businessId  String
+  business    Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+
+  @@unique([businessId, userId])
+}
+
+model BusinessFavorite {
+  id          String   @id @default(cuid())
+  businessId  String
+  business    Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+
+  @@unique([businessId, userId])
+}
+
+model BusinessList {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title       String
+  description String?
+  isPublic    Boolean  @default(true)
+  slug        String   @unique
+  createdAt   DateTime @default(now())
+
+  items BusinessListItem[]
+}
+
+model BusinessListItem {
+  id          String       @id @default(cuid())
+  listId      String
+  list        BusinessList @relation(fields: [listId], references: [id], onDelete: Cascade)
+  businessId  String
+  business    Business     @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  note        String?
+  sortOrder   Int          @default(0)
+  createdAt   DateTime     @default(now())
+
+  @@unique([listId, businessId])
+}
+
+model BusinessAnalyticsEvent {
+  id          String             @id @default(cuid())
+  businessId  String
+  business    Business           @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  eventType   AnalyticsEventType
+  metadataJson String?
+  createdAt   DateTime           @default(now())
+}
