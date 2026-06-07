@@ -52,3 +52,5 @@ next-env.d.ts
 app/page_bkp.tsx
 pending.txt
 brainstorming_ideas*.txt
+
+.vercel
